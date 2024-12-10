@@ -21,7 +21,9 @@ const corsOptions = {
   methods: ["POST", "GET"],
   credentials: true,
 };
-
+app.get("/", (req, res) => {
+  res.json("hello");
+});
 app.use(cors(corsOptions));
 
 const PORT = process.env.PORT || 3000;
