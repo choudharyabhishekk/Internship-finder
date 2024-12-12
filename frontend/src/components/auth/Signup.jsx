@@ -19,31 +19,60 @@ const Signup = () => {
     phoneNumber: "",
     password: "",
     role: "",
-    file: "",
+    file: null, // Initialize as null for consistency
   });
+
+  const [errors, setErrors] = useState({}); // State for error messages
+
   const { loading, user } = useSelector((store) => store.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  // Handle text and radio input changes
   const changeEventHandler = (e) => {
     setInput({ ...input, [e.target.name]: e.target.value });
+    // Clear the error for the current field
+    setErrors({ ...errors, [e.target.name]: "" });
   };
 
+  // Handle file input changes
   const changeFileHandler = (e) => {
-    setInput({ ...input, file: e.target.files?.[0] });
+    const file = e.target.files?.[0] || null;
+    setInput({ ...input, file });
+    // Clear the error for the file field
+    setErrors({ ...errors, file: "" });
+  };
+
+  // Validation function to ensure Profile Picture is uploaded
+  const validate = () => {
+    const newErrors = {};
+
+    // Profile Picture Validation (Required)
+    if (!input.file) {
+      newErrors.file = "Profile Picture is required.";
+    }
+
+    setErrors(newErrors);
+
+    // Return true if no errors
+    return Object.keys(newErrors).length === 0;
   };
 
   const submitHandler = async (e) => {
     e.preventDefault();
-    const formData = new FormData(); // formdata object
+
+    if (!validate()) {
+      toast.error("Please upload a profile picture to proceed.");
+      return;
+    }
+
+    const formData = new FormData(); // FormData object
     formData.append("fullname", input.fullname);
     formData.append("email", input.email);
     formData.append("phoneNumber", input.phoneNumber);
     formData.append("password", input.password);
     formData.append("role", input.role);
-    if (input.file) {
-      formData.append("file", input.file);
-    }
+    formData.append("file", input.file); // Profile Picture is now required
 
     try {
       dispatch(setLoading(true));
@@ -57,7 +86,7 @@ const Signup = () => {
       }
     } catch (error) {
       console.error(error);
-      toast.error(error.response.data.message);
+      toast.error(error.response?.data?.message || "Something went wrong!");
     } finally {
       dispatch(setLoading(false));
     }
@@ -78,6 +107,8 @@ const Signup = () => {
           className="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg"
         >
           <h1 className="text-2xl font-bold mb-5 text-center">Sign Up</h1>
+
+          {/* Full Name Field */}
           <div className="mb-6">
             <Label
               htmlFor="fullname"
@@ -96,7 +127,10 @@ const Signup = () => {
                 className="block w-full py-2 pl-4 border rounded-lg bg-gray-100 focus:ring-primary focus:border-primary"
               />
             </div>
+            {/* Remove error display if not needed */}
           </div>
+
+          {/* Email Field */}
           <div className="mb-6">
             <Label
               htmlFor="email"
@@ -116,6 +150,8 @@ const Signup = () => {
               />
             </div>
           </div>
+
+          {/* Phone Number Field */}
           <div className="mb-6">
             <Label
               htmlFor="phoneNumber"
@@ -135,6 +171,8 @@ const Signup = () => {
               />
             </div>
           </div>
+
+          {/* Password Field */}
           <div className="mb-6">
             <Label
               htmlFor="password"
@@ -154,57 +192,83 @@ const Signup = () => {
               />
             </div>
           </div>
-          <RadioGroup className="flex items-center gap-4 my-5">
-            <div className="flex items-center space-x-2">
-              <Input
-                type="radio"
-                name="role"
-                value="student"
-                checked={input.role === "student"}
-                onChange={changeEventHandler}
-                className="cursor-pointer"
-              />
-              <Label htmlFor="r1">Student</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Input
-                type="radio"
-                name="role"
-                value="recruiter"
-                checked={input.role === "recruiter"}
-                onChange={changeEventHandler}
-                className="cursor-pointer"
-              />
-              <Label htmlFor="r2">Recruiter</Label>
-            </div>
-          </RadioGroup>
+
+          {/* Role Radio Group */}
+          <div className="mb-6">
+            <Label className="block text-sm font-medium text-gray-700 mb-2">
+              Role
+            </Label>
+            <RadioGroup className="flex items-center gap-4">
+              <div className="flex items-center space-x-2">
+                <Input
+                  type="radio"
+                  name="role"
+                  value="student"
+                  checked={input.role === "student"}
+                  onChange={changeEventHandler}
+                  className="cursor-pointer"
+                  id="student"
+                />
+                <Label htmlFor="student">Student</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Input
+                  type="radio"
+                  name="role"
+                  value="recruiter"
+                  checked={input.role === "recruiter"}
+                  onChange={changeEventHandler}
+                  className="cursor-pointer"
+                  id="recruiter"
+                />
+                <Label htmlFor="recruiter">Recruiter</Label>
+              </div>
+            </RadioGroup>
+          </div>
+
+          {/* Profile Picture Field */}
           <div className="mb-6">
             <Label
               htmlFor="file"
               className="block text-sm font-medium text-gray-700"
             >
-              Profile Picture
+              Profile Picture <span className="text-red-500">*</span>
             </Label>
             <Input
               id="file"
               accept="image/*"
               type="file"
               onChange={changeFileHandler}
-              className="block w-full py-2 border rounded-lg bg-gray-100 cursor-pointer focus:ring-primary focus:border-primary"
+              className={`block w-full py-2 border rounded-lg bg-gray-100 cursor-pointer focus:ring-primary focus:border-primary ${
+                errors.file ? "border-red-500" : ""
+              }`}
             />
+            {errors.file && (
+              <p className="text-red-500 text-sm mt-1">{errors.file}</p>
+            )}
           </div>
-          {loading ? (
-            <Button className="w-full py-2 text-center bg-blue-500 text-white rounded-lg hover:bg-primary-dark">
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Please wait
-            </Button>
-          ) : (
-            <Button
-              type="submit"
-              className="w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-primary-dark"
-            >
-              Signup
-            </Button>
-          )}
+
+          {/* Submit Button */}
+          <div className="mb-6">
+            {loading ? (
+              <Button
+                type="button"
+                disabled
+                className="w-full py-2 text-center bg-blue-500 text-white rounded-lg hover:bg-primary-dark flex items-center justify-center"
+              >
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Please wait
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                className="w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-primary-dark"
+              >
+                Signup
+              </Button>
+            )}
+          </div>
+
+          {/* Login Link */}
           <p className="mt-4 text-center text-sm text-gray-600">
             Already have an account?{" "}
             <Link to="/login" className="text-primary hover:underline">

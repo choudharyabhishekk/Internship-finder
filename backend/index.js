@@ -12,19 +12,23 @@ dotenv.config({});
 
 const app = express();
 
+// CORS options
+const corsOptions = {
+  origin: ["http://internsphere.vercel.app"],
+  methods: ["POST", "GET", "OPTIONS"],
+  credentials: true,
+};
+
 // middleware
+app.use(cors(corsOptions)); 
+app.options("*", cors(corsOptions)); 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-const corsOptions = {
-  origin: ["http://internsphere.vercel.app"],
-  methods: ["POST", "GET"],
-  credentials: true,
-};
+
 app.get("/", (req, res) => {
   res.json("hello");
 });
-app.use(cors(corsOptions));
 
 const PORT = process.env.PORT || 3000;
 
