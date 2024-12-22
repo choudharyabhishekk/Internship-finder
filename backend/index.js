@@ -9,19 +9,30 @@ import jobRoute from "./routes/job.route.js";
 import applicationRoute from "./routes/application.route.js";
 
 dotenv.config({});
-
 const app = express();
 
-// CORS options
 const corsOptions = {
-  origin: ["http://internsphere.vercel.app"],
-  methods: ["POST", "GET", "OPTIONS"],
+  origin: ["http://internsphere.vercel.app", "https://internsphere.vercel.app"],
+  methods: ["POST", "GET", "OPTIONS", "PUT", "DELETE", "PATCH"],
   credentials: true,
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
+  exposedHeaders: ["set-cookie"],
 };
 
-// middleware
-app.use(cors(corsOptions)); 
-app.options("*", cors(corsOptions)); 
+// CORS middleware first
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
+
+// Additional CORS headers
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', 'https://internsphere.vercel.app');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Credentials', true);
+  next();
+});
+
+// Other middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -30,13 +41,13 @@ app.get("/", (req, res) => {
   res.json("hello");
 });
 
-const PORT = process.env.PORT || 3000;
-
-// api's
+// API routes
 app.use("/api/v1/user", userRoute);
 app.use("/api/v1/company", companyRoute);
 app.use("/api/v1/job", jobRoute);
 app.use("/api/v1/application", applicationRoute);
+
+const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   connectDB();
