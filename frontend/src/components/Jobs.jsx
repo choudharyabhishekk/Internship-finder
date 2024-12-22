@@ -55,7 +55,7 @@ const Jobs = () => {
   return (
     <div>
       <Navbar />
-      <div className="max-w-7xl m-8 my-10">
+      <div className="max-w-7xl mx-auto my-10">
         {/* Filters Section */}
         <div className="mb-6 flex gap-4">
           {/* Search Input */}
